@@ -53,7 +53,7 @@ class QPainter;
 class QTranslator;
 class QWidget;
 class QXmlStreamReader;
-class QXmlStreamWriter;
+class QXmlStreamWriter;   // IWYU pragma: keep
 // IWYU pragma: no_forward_declare QRectF
 
 namespace OpenOrienteering {
@@ -96,6 +96,8 @@ friend class MapTest;
 friend class MapRenderables;
 friend class XMLFileImporter;
 friend class XMLFileExporter;
+friend class XMLDirectoryExporter;
+friend class XMLDirectoryImporter;
 public:
 	/** A set of selected objects represented by a std::set of object pointers. */
 	typedef std::set<Object*> ObjectSelection;
