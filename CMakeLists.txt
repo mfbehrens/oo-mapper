@@ -197,6 +197,33 @@ else()
 	find_package(Polyclipping 6.1.3 MODULE REQUIRED)
 endif()
 
+set(Mapper_BUILD_QUAZIP "auto" CACHE STRING
+  "Build the QuaZip package from source, alternatives: ON, OFF"
+)
+find_package(PkgConfig)
+if(Mapper_BUILD_QUAZIP STREQUAL "auto")
+	pkg_check_modules(QuaZip QUIET IMPORTED_TARGET quazip1-qt5)
+	if(NOT QuaZip_FOUND)
+		message(WARNING
+		  "System QuaZip is missing. Enabling embedded build.\n"
+		  "Set Mapper_BUILD_QUAZIP=OFF to disable embedded build."
+		  )
+		set_property(CACHE Mapper_BUILD_QUAZIP PROPERTY VALUE "ON")
+	else()
+		set_property(CACHE Mapper_BUILD_QUAZIP PROPERTY VALUE "OFF")
+	endif()
+	set_property(CACHE Mapper_BUILD_QUAZIP PROPERTY TYPE "BOOL")
+endif()
+if(Mapper_BUILD_QUAZIP)
+	add_subdirectory(3rd-party/quazip)
+else()
+	if(NOT TARGET PkgConfig::QuaZip)
+		find_package(PkgConfig REQUIRED)
+		pkg_check_modules(QuaZip REQUIRED IMPORTED_TARGET quazip1-qt5)
+	endif()
+	add_library(QuaZip::QuaZip ALIAS PkgConfig::QuaZip)
+endif()
+
 # We must not require a minimum version of PROJ via find_package
 # because PROJ config requires the major version to match exactly.
 find_package(PROJ CONFIG)

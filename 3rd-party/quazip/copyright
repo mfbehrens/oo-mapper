@@ -1,0 +1,25 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: QuaZip
+Upstream-Contact: Sergey A. Tachenov
+Source: https://stachenov.github.io/quazip/
+
+Files: *
+Copyright: Copyright 2005-2021 Sergey A. Tachenov and QuaZip contributors
+License: LGPL-2.1+ with static linking exception
+ The QuaZip library is licensed under the GNU Lesser General Public License
+ version 2.1 or any later version, plus a static linking exception:
+ .
+ STATIC LINKING EXCEPTION
+ .
+ The copyright holders give you permission to link this library with
+ independent modules to produce an executable, regardless of the license terms
+ of these independent modules, and to copy and distribute the resulting
+ executable under terms of your choice, provided that you also meet, for each
+ linked independent module, the terms and conditions of the license of that
+ module. An independent module is a module which is not derived from or based
+ on this library. If you modify this library, you must extend this exception
+ to your version of the library.
+ .
+ The original ZIP/UNZIP package (MiniZip), which is included in QuaZip in a
+ modified state, is copyrighted by Gilles Vollant and contributors and is
+ licensed under the zlib license.
