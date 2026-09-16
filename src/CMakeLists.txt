@@ -143,6 +143,7 @@ set(Mapper_Common_SRCS
   fileformats/ocd_types.cpp
   fileformats/simple_course_export.cpp
   fileformats/xml_directory_format.cpp
+  fileformats/xml_zip_format.cpp
   fileformats/xml_file_format.cpp
   
   gui/about_dialog.cpp
@@ -314,6 +315,7 @@ add_dependencies(Mapper_Common
   Mapper_prerequisites
 )
 target_link_libraries(Mapper_Common
+  QuaZip::QuaZip
   Polyclipping::Polyclipping
   ${PROJ_LIBRARIES}
   Qt5::Widgets
