@@ -207,6 +207,10 @@ bool XMLDirectoryExporter::exportImplementation()
 	QScopedValueRollback<int> active_version_rollback { XMLFileFormat::active_version };
 	XMLFileFormat::active_version = XMLFileFormat::current_version;
 	
+
+	// Hide counts from the files
+	QScopedValueRollback<bool> write_count_rollback{ XmlElementWriter::write_count, false };
+	
 	// Write all member files, each into a temporary file; the actual member
 	// files are replaced only when all of them were written successfully.
 	exportColors();
@@ -290,7 +294,8 @@ void XMLDirectoryExporter::exportSymbols()
 		XmlElementWriter symbols_element(xml, literal::symbols);
 		auto const id = map->symbolSetId();
 		int num_symbols = map->getNumSymbols();
-		symbols_element.writeAttribute(literal::count, num_symbols);
+		if (XmlElementWriter::write_count)
+			symbols_element.writeAttribute(literal::count, num_symbols);
 		if (!id.isEmpty())
 			symbols_element.writeAttribute(literal::id, id);
 		for (int i = 0; i < num_symbols; ++i)
@@ -327,8 +332,10 @@ void XMLDirectoryExporter::exportParts()
 	
 	// Write the parts index, listing all part files.
 	createMemberFile(literal::parts_index_file, [this, num_parts](QXmlStreamWriter& xml) {
+		// The count is implicit in the number of <part> elements of the member file.
 		XmlElementWriter parts_element(xml, literal::parts);
-		parts_element.writeAttribute(literal::count, std::size_t(num_parts));
+		if (XmlElementWriter::write_count)
+			parts_element.writeAttribute(literal::count, std::size_t(num_parts));
 		for (auto const& filename : part_filenames)
 		{
 			xml.writeEmptyElement(literal::part);
@@ -347,6 +354,7 @@ void XMLDirectoryExporter::exportTemplates()
 	QDir const folder{ folder_path.isEmpty() ? target_path : folder_path };
 	
 	createMemberFile(literal::templates_index_file, [this, &folder](QXmlStreamWriter& xml) {
+		// The count is implicit in the number of <template> elements of the member file.
 		// Writes the configuration of one template to the templates index.
 		auto const write_template = [this, &folder](QXmlStreamWriter& xml, const Template* temp, bool open) {
 			// Whether to suppress the absolute path, yes if inside the templates folder
@@ -363,7 +371,8 @@ void XMLDirectoryExporter::exportTemplates()
 		};
 		
 		xml.writeStartElement(literal::templates);
-		xml.writeAttribute(literal::count, QString::number(map->getNumTemplates() + map->getNumClosedTemplates()));
+		if (XmlElementWriter::write_count)
+			xml.writeAttribute(literal::count, QString::number(map->getNumTemplates() + map->getNumClosedTemplates()));
 		xml.writeAttribute(literal::first_front_template, QString::number(map->getFirstFrontTemplate()));
 		for (int i = 0; i < map->getNumTemplates(); ++i)
 			write_template(xml, map->getTemplate(i), true);
@@ -653,8 +662,11 @@ void XMLDirectoryImporter::importSymbols()
 		
 		XmlElementReader symbols_element(xml);
 		map->setSymbolSetId(symbols_element.attribute<QString>(literal::id));
-		auto num_symbols = symbols_element.attribute<std::size_t>(literal::count);
-		map->symbols.reserve(qMin(num_symbols, std::size_t(1000))); // 1000 is not a limit
+
+		if (symbols_element.hasAttribute(literal::count)) {
+			auto num_symbols = symbols_element.attribute<std::size_t>(literal::count);
+			map->symbols.reserve(qMin(num_symbols, std::size_t(1000))); // 1000 is not a limit
+		}
 		
 		symbol_dict[map->findSymbolIndex(map->getUndefinedPoint())] = map->getUndefinedPoint();
 		symbol_dict[map->findSymbolIndex(map->getUndefinedLine())] = map->getUndefinedLine();
@@ -671,12 +683,6 @@ void XMLDirectoryImporter::importSymbols()
 				xml.skipCurrentElement();
 			}
 		}
-		
-		if (num_symbols > 0 && num_symbols != map->symbols.size())
-			addWarning(tr("Expected %1 symbols, found %2.").
-			  arg(num_symbols).
-			  arg(map->symbols.size())
-			);
 	});
 }
 
@@ -739,9 +745,12 @@ void XMLDirectoryImporter::importTemplates()
 		XmlElementReader templates_element(xml);
 		int first_front_template = templates_element.attribute<int>(literal::first_front_template);
 		
-		auto num_templates = templates_element.attribute<std::size_t>(literal::count);
-		map->templates.reserve(qMin(num_templates, std::size_t(20))); // 20 is not a limit
-		map->closed_templates.reserve(qMin(num_templates, std::size_t(20))); // 20 is not a limit
+		if (templates_element.hasAttribute(literal::count))
+		{
+			auto const num_templates = templates_element.attribute<std::size_t>(literal::count);
+			map->templates.reserve(qMin(num_templates, std::size_t(20))); // 20 is not a limit
+			map->closed_templates.reserve(qMin(num_templates, std::size_t(20))); // 20 is not a limit
+		}
 		
 		while (xml.readNextStartElement())
 		{

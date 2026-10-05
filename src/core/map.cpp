@@ -159,7 +159,8 @@ void Map::MapColorSet::save(QXmlStreamWriter& xml) const
 {
 	XmlElementWriter all_colors_element(xml, QLatin1String("colors"));
 	std::size_t num_colors = colors.size();
-	all_colors_element.writeAttribute(QLatin1String("count"), num_colors);
+	if (XmlElementWriter::write_count)
+		all_colors_element.writeAttribute(QLatin1String("count"), num_colors);
 	
 	for (std::size_t i = 0; i < num_colors; ++i)
 	{
